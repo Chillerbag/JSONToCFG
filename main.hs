@@ -7,18 +7,32 @@ data Terminal = TermString String
 
 
 data Symbol = Term Terminal 
-  | NonTerminal String 
+  | NonTerminal String  
   deriving (Show, Eq)
 
 data Rule = Rule 
   { lhs :: Symbol
   , rhs :: [Symbol]
-  } deriving (Show)
+  } 
+  deriving (Show)
 
 data Grammar = Grammar
   { rules :: [Rule]
   , startSymbol :: Symbol
-  } deriving (Show)
+  } 
+  deriving (Show)
+
+data ParseTree = Node
+  { nodeSymbol :: Symbol
+  , children :: [ParseTree]  
+  } | Leaf Terminal 
+  deriving (Show)
+
+data ParseResult = Success [ParseTree] String
+  | Failure 
+  deriving (Show)
+
+  
 
 jsonGrammar :: Grammar
 jsonGrammar = Grammar 
@@ -75,7 +89,7 @@ jsonGrammar = Grammar
 
     , Rule (NonTerminal "B") [Term (TermString "e"), Term (TermString "+")] -- power? 
     , Rule (NonTerminal "B") [Term (TermString "e"), Term (TermString "-")]
-    -- every integer 
+    -- every integer we can use
     , Rule (NonTerminal "D") [Term (TermInt 0)]
     , Rule (NonTerminal "D") [Term (TermInt 1)]
     , Rule (NonTerminal "D") [Term (TermInt 2)]
@@ -88,8 +102,34 @@ jsonGrammar = Grammar
     , Rule (NonTerminal "D") [Term (TermInt 9)]
     ]   
     ,
-    startSymbol = NonTerminal "O" 
+    startSymbol = NonTerminal "O"
   }
+
+findRulesToApply :: Symbol -> Grammar -> [Rule] 
+findRulesToApply nt g = filter (\r -> lhs r == nt) (rules g)
+
+
+startParse :: String -> Grammar -> Maybe ParseTree
+startParse jstr grammar =
+    case tryToApply (findRulesToApply (startSymbol grammar) grammar) jstr grammar of 
+        Success [tree] "" -> Just tree
+        _ -> Nothing
+
+-- tries to apply each rule
+tryToApply :: [Rule] -> String -> Grammar -> ParseResult 
+tryToApply [] _ _ = Failure -- no rules left
+tryToApply (rh:rt) inputJSON grammar = 
+  case subRuleChecker (rhs rh) inputJSON grammar of 
+    Success children remainingInput ->
+      Success [Node (lhs rh) children] remainingInput 
+    Failure -> tryToApply rt inputJSON grammar
+    
+
+
+subRuleChecker :: [Symbol] -> String -> Grammar -> ParseResult
+subRuleChecker [] input _ = Success [] input 
+
+
 
 main :: IO () 
 main = putStrLn "Hello"
