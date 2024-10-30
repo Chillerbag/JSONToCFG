@@ -67,11 +67,10 @@ jsonGrammar = Grammar
     --, Rule (NonTerminal 'V') [Term (TermChar 'null')] -- TODO: LOOK INTO HOW WE DEAL WITH PARSING NULL
 
     -- here we start dealing with strings 
-    , Rule (NonTerminal 'S') [Term (TermChar '"' ), Term (TermChar '"')]
     , Rule (NonTerminal 'S') [Term (TermChar '"'), NonTerminal 'H', Term (TermChar '"')]
-    , Rule (NonTerminal 'H') [NonTerminal 'H']
-    , Rule (NonTerminal 'H') [NonTerminal 'C', NonTerminal 'H']
-    , Rule (NonTerminal 'C') [Term (TermAnyChar 'x')]-- uhhh
+    , Rule (NonTerminal 'S') [Term (TermChar '"'), Term (TermChar '"')]
+    , Rule (NonTerminal 'H') [Term (TermAnyChar 'x')]
+    , Rule (NonTerminal 'H') [Term (TermAnyChar 'x'), NonTerminal 'H']
 
     -- ok here we start building numbers
     , Rule (NonTerminal 'N') [NonTerminal 'I']
@@ -131,25 +130,8 @@ subRuleChecker :: [Symbol] -> String -> Grammar -> ParseResult
 
 -- idk if this is right 
 subRuleChecker [] input _ = Success [] input
-subRuleChecker (sym:restSyms) inputJSON grammar =
-  case sym of
-    NonTerminal nt ->
-      case tryToApply (findRulesToApply sym grammar) inputJSON grammar of
-        Success subtree remainingInput ->
-          case subRuleChecker restSyms remainingInput grammar of
-            Success restTree finalInput ->
-              Success (subtree ++ restTree) finalInput
-            Failure -> Failure
-        Failure -> Failure
-    Term terminal ->
-      case matchTerminal terminal inputJSON of
-        Just (matched, remainingInput) ->
-          case subRuleChecker restSyms remainingInput grammar of
-            Success restTree finalInput ->
-              Success (Leaf matched : restTree) finalInput
-            Failure -> Failure
-        Nothing -> Failure
-
+subRuleChecker (sym:restSyms) inputJSON grammar = --to implement 
+  
 
 -- check if something is the same as its terminal (first we must parse to type)
 matchTerminal :: Terminal -> String -> Maybe (Terminal, String)
@@ -180,12 +162,6 @@ isValidJSONChar :: Char -> Bool
 isValidJSONChar c =
   c /= '"' && c /= '\\' && c >= '\x20'
 
-
-
-
-
--- gotta account and skip over whitespace
-
 main :: IO ()
-main = print (startParse "{}" jsonGrammar)
+main = print (startParse "{\"key\":\"\"}" jsonGrammar)
 
