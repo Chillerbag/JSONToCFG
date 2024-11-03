@@ -19,22 +19,38 @@ iterOverStack :: [[Symbol]] -> String -> Grammar -> Maybe ParseTree
 iterOverStack [] [] _ = Nothing
 iterOverStack (stacksH:stacksT) (jsonHead:jsonTail) grammar =
   case stackChecker stacksH grammar (jsonHead:jsonTail)  of
-    Just (remainingInput, moreStacks) -> iterOverStack (moreStacks ++ stacksT) remainingInput grammar
+    Just (remainingInput, moreStacks, tree) -> 
+      if null remainingInput
+      then Just tree 
+      else iterOverStack (moreStacks ++ stacksT) remainingInput grammar
     Nothing -> iterOverStack stacksT (jsonHead:jsonTail) grammar -- prune dead stacks. 
 
-stackChecker :: [Symbol] -> Grammar -> String -> Maybe (String, [[Symbol]])
+stackChecker :: [Symbol] -> Grammar -> String -> Maybe (String, [[Symbol]], ParseTree)
 stackChecker (sym:syms) grammar input =
   case sym of
     -- in this case, we havent moved, just added new things to check
-    NonTerminal nt -> Just (input, newStacks)
+    NonTerminal nt -> Just (input, newStacks, Node (NonTerminal nt) [])
       where
         nextRules = findRulesToApply (NonTerminal nt) grammar
         nextSyms = map rhs nextRules
         newStacks = map (++ syms) nextSyms
     Term t ->
       case matchTerminal t input of
-        Just (_, remainingInput) -> Just (remainingInput, [syms])  -- Continue with remaining symbols
+        Just (matched, remainingInput) -> Just (remainingInput, [syms], nextTree)  -- Continue with remaining symbols
+          where 
+            curLeaf = Leaf matched
+            nextTree = 
+              if null syms 
+              then curLeaf
+              else buildTreeFromStack curLeaf syms
         Nothing -> Nothing
+
+buildTreeFromStack :: ParseTree -> [Symbol] -> ParseTree
+buildTreeFromStack curTree [] = curTree
+buildTreeFromStack curTree (sym:syms) = 
+  case sym of
+    NonTerminal nt -> Node (NonTerminal nt) [buildTreeFromStack curTree syms]
+    Term t -> buildTreeFromStack curTree syms
 
 -- check if something is the same as its terminal (first we must parse to type)
 matchTerminal :: Terminal -> String -> Maybe (Terminal, String)
@@ -69,5 +85,7 @@ isValidJSONChar c =
   c /= '"' && c /= '\\' && c >= '\x20'
 
 main :: IO ()
-main = print (startParse "{\"key\":\"\"}" jsonGrammar)
-
+main = do
+  case startParse "{\"key\":\"value\"}" jsonGrammar of
+    Just tree -> print tree
+    Nothing -> putStrLn "Failed to parse"
