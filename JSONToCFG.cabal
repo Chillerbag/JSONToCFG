@@ -1,6 +1,6 @@
 cabal-version:   3.0
 name:            JSONToCFG
-version:         0.1.0.0
+version:         0.1.5.0
 synopsis:
     This is a JSON parser using the context free grammar for JSON and runs like a pushdown automata with multiple stacks to handle nondeterminism.
 
