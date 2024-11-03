@@ -1,0 +1,51 @@
+### Haskell
+dist
+dist-*
+cabal-dev
+*.o
+*.hi
+*.hie
+*.chi
+*.chs.h
+*.dyn_o
+*.dyn_hi
+*.prof
+*.aux
+*.hp
+*.eventlog
+.virtualenv
+.hsenv
+.hpc
+.cabal-sandbox/
+cabal.sandbox.config
+cabal.config
+cabal.project.local
+.ghc.environment.*
+.HTF/
+# Stack
+.stack-work/
+
+### IDE/Editor
+# VSCode
+.vscode/
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+
+### OS specific
+# Mac
+.DS_Store
+.AppleDouble
+.LSOverride
+# Linux
+*~
+# Windows
+Thumbs.db
+Desktop.ini

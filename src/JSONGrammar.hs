@@ -1,4 +1,5 @@
 module JSONGrammar where
+  
 data Terminal = TermChar Char
   | TermInt Int
   | TermBool Bool

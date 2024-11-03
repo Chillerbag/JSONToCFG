@@ -2,7 +2,6 @@ module ParseLogic where
 import JSONGrammar
 import ParseTreeBuilder
 
-
 data ParseState = ParseState
   { symbolStack :: [Symbol]
   , treeStack :: [ParseTree]
